@@ -1,0 +1,3 @@
+
+In your python terminal run the command: pip install -r .\requirements.txt
+This will install all packages listed in requirements.txt
