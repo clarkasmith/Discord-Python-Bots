@@ -1,6 +1,9 @@
 import requests
 import os
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 GOODREADS_API_KEY = os.getenv('GOODREADS_API_KEY')
 
@@ -17,3 +20,11 @@ headers = {
 response = requests.get(url, headers=headers, params=querystring)
 
 print(response.json())
+
+books = response.json()
+
+first_book = books[0]
+
+print("Title of the first book:", first_book['title'])
+
+# print(response.json())

@@ -41,6 +41,12 @@ async def hello(ctx):
     await ctx.send(f"Hello {ctx.author.mention}!")
 
 
+@bot.command()
+async def embed(ctx):
+    embed = discord.Embed(title="I am a Title", description="I am the description")
+    await ctx.send(embed=embed)
+
+
 TITLE_RE = re.compile(r"^\[\[(.*?)\]\]$", re.DOTALL | re.IGNORECASE)
 
 @bot.event
@@ -50,51 +56,60 @@ async def on_message(message: discord.Message):
 
     title = message.content
 
-    try:
-        result = await get_goodreads_book(title)
-    except Exception as exc:
-        await message.channel.send(f"Couldn't reach Goodreads: {exc}")
-        return
+    result = await get_openlibrary_book(title)
 
     embed = create_embed(result)
 
     await message.channel.send(embed=embed)
 
 
-async def get_goodreads_book(title: str) -> dict:
+async def get_openlibrary_book(title: str):
 
-    # print("here")
+    words = title.split()
+    joined = "+".join(words)
 
-    url = "https://goodreads12.p.rapidapi.com/searchBooks"
-    params = {"keyword": title, "page": 1}
+    url = f"https://openlibrary.org/search.json?q={joined}"
     headers = {
-        "x-rapidapi-key": GOODREADS_API_KEY,
-        "x-rapidapi-host": "goodreads12.p.rapidapi.com",
-        "Content-Type": "application/json"
+        "User-Agent": "MyAppName/1.0 (myemail@example.com)"
     }
+    response = requests.get(url, headers=headers)
+    print(response.json()["docs"][0])
+    return response.json()["docs"][0]
 
-    response = requests.get(url, headers=headers, params=params)
 
-    print(response.json())
-
-    return response.json()
+# async def get_goodreads_book(title: str) -> dict:
+#
+#     # print("here")
+#
+#     url = "https://goodreads12.p.rapidapi.com/searchBooks"
+#     params = {"keyword": title, "page": 1}
+#     headers = {
+#         "x-rapidapi-key": GOODREADS_API_KEY,
+#         "x-rapidapi-host": "goodreads12.p.rapidapi.com",
+#         "Content-Type": "application/json"
+#     }
+#
+#     response = requests.get(url, headers=headers, params=params)
+#
+#     book = response.json()[0]
+#     print(book)
+#
+#     print(response.json())
+#
+#     return response.json()
 
 
 def create_embed(book) -> discord.Embed:
 
-    print("here")
-
-    title = book.get('title')
-    authors = [a.get('name', '') for a in book.get('author', [])]
-    img = book.get("imageUrl")
+    title = book["title"]
+    author = book["author_name"]
+    year = book["first_publish_year"]
 
     embed = discord.Embed(
         title=title,
-        description=f"Author(s): {authors}",
+        description=f"Author: {author}",
         color=discord.Color.blurple()
     )
-    if img:
-        embed.set_thumbnail(url=img)
     return embed
 
 
